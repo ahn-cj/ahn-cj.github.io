@@ -126,7 +126,7 @@ function fillPairPreview(pairId, inputGrid, outputGrid) {
     fitCellsToContainer(jqOutputGrid, outputGrid.height, outputGrid.width, 200, 200);
 }
 
-function loadJSONTask(train) {
+function loadJSONTask(train, test) {
     resetTask();
     $('#modal_bg').hide();
     $('#error_display').hide();
@@ -140,13 +140,16 @@ function loadJSONTask(train) {
         output_grid = convertSerializedGridToGridObject(values)
         fillPairPreview(i, input_grid, output_grid);
     }
+    for (var i=0; i < test.length; i++) {
+        pair = test[i];
+        TEST_PAIRS.push(pair);
+	}
     values = TEST_PAIRS[0]['input'];
     CURRENT_INPUT_GRID = convertSerializedGridToGridObject(values)
     fillTestInput(CURRENT_INPUT_GRID);
     CURRENT_TEST_PAIR_INDEX = 0;
     $('#current_test_input_id_display').html('1');
     $('#total_test_input_count_display').html(test.length);
-
     initPDDL();
 }
 
@@ -164,11 +167,12 @@ function loadTaskFromFile(e) {
         try {
             contents = JSON.parse(contents);
             train = contents['train'];
+            test = contents['test'];
         } catch (e) {
             errorMsg('Bad file format');
             return;
         }
-        loadJSONTask(train);
+        loadJSONTask(train, test);
     };
     reader.readAsText(file);
 }
@@ -177,17 +181,18 @@ function loadTaskFromFile(e) {
 function randomTask() {
     var subset = "training";
 //need to change source to my github...
-    $.getJSON("https://api.github.com/repos/ahn-cj/ARC-behavioral/demo-tasks" + subset, function(tasks) {
+    $.getJSON("https://ahn-cj.github.io/ARC-behavioral/data" + subset, function(tasks) {
       var task = tasks[Math.floor(Math.random() * tasks.length)];
       TASK_ID = task['name'];
       $.getJSON(task["download_url"], function(json) {
           try {
               train = json['train'];
+				test = json['test'];
           } catch (e) {
               errorMsg('Bad file format');
               return;
           }
-          loadJSONTask(train);
+          loadJSONTask(train, test);
           $('#load_task_file_input')[0].value = "";
           infoMsg("Loaded task training/" + task["name"]);
       })
